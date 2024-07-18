@@ -10,9 +10,12 @@ import {
   NavDropdown,
   Navbar,
 } from "react-bootstrap";
+import { useDispatch } from 'react-redux';
 import { LinkContainer } from "react-router-bootstrap";
 import { Link } from "react-router-dom";
+import { logout } from "../redux/actions/userActions";
 const HeaderComponent = () => {
+  const dispatch=useDispatch()
   return (
     <Navbar collapseOnSelect expand="lg" bg="dark" variant="dark">
       <Container>
@@ -67,9 +70,9 @@ const HeaderComponent = () => {
                 My profile
               </NavDropdown.Item>
               <NavDropdown.Item
-                eventKey="/user/my-order"
-                as={Link}
-                to="/user/my-order"
+                onClick={()=>{
+                  dispatch(logout())
+                }}
               >
                 Logout
               </NavDropdown.Item>

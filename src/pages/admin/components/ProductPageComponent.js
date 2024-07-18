@@ -2,33 +2,37 @@ import React, { useEffect, useState } from "react";
 import { Button, Col, Row, Table } from "react-bootstrap";
 import { LinkContainer } from "react-router-bootstrap";
 import AdminLinksComponent from "../../../components/admin/AdminLinksComponent";
-export default function UserPageComponent({ fetchUsers, deleteUser }) {
-  const [users, setUsers] = useState([]);
-  const [userDeleted, setUserDeleted] = useState(false);
+export default function ProductsPageComponent({
+  fetchProducts,
+  deleteProducts,
+}) {
+  const [products, setProducts] = useState([]);
+  const [productDelete, setProductDelete] = useState(false);
 
-  const deleteHandler = async (userId) => {
-    if (window.confirm("do you want to delete?")) {
-      const data = await deleteUser(userId);
-      if (data === "user deleted") {
-        setUserDeleted(!userDeleted);
+  const deleteHandler = async(prodId) => {
+    if (window.confirm("Are You Sure!?")) {
+      const data = await deleteProducts(prodId);
+      if (data.message === "product removed") {
+        setProductDelete(!productDelete);
       }
     }
   };
   useEffect(() => {
     const abctrl = new AbortController();
-    fetchUsers(abctrl)
-      .then((res) => setUsers(res))
+    fetchProducts(abctrl)
+      .then((res) => setProducts(res))
       .catch((er) => {
-        setUsers([
-          {
-            name: er.response.data.message
-              ? er.response.data.message
-              : er.response.data,
-          },
-        ]);
+        setProducts([
+            {
+              name: er.response.data.message
+                ? er.response.data.message
+                : er.response.data,
+            },
+          ]);
       });
     return () => abctrl.abort();
-  }, [userDeleted]);
+  }, [productDelete]);
+
   return (
     <Row className="m-5">
       <Col md={2}>
@@ -37,35 +41,36 @@ export default function UserPageComponent({ fetchUsers, deleteUser }) {
       <Col md={10}>
         <Row className="m-5">
           <Col md={12}>
-            <h1>User List</h1>
+            <h1>
+              Product List{" "}
+              <LinkContainer to="/admin/create-new-products">
+                <Button variant="primary" size="lg">
+                  Create New
+                </Button>
+              </LinkContainer>
+            </h1>
             <Table striped bordered hover responsive>
               <thead>
                 <tr>
                   <th>#</th>
-                  <th>First Name</th>
-                  <th>Last Name</th>
-                  <th>Email</th>
-                  <th>Is Admin</th>
+                  <th>Product Name</th>
+                  <th>Price</th>
+                  <th>Category</th>
                   <th>Edit/Delete</th>
                 </tr>
               </thead>
               <tbody>
-                {/* ["", ]                 */}
-                {users.map((user, idx) => (
+                {products.map((item, idx) => (
                   <tr key={idx}>
                     <td>{idx + 1}</td>
-                    <td>{user.name}</td>
-                    <td>{user.lastName}</td>
-                    <td>{user.email}</td>
+                    <td>{item.name}</td>
+                    <td>{item.price}</td>
+                    <td>{item.category}</td>
                     <td>
-                      {user.isAdmin ? (
-                        <i className="bi bi-check-lg text-success" />
-                      ) : (
-                        <i className="bi bi-x-lg text-danger" />
-                      )}
+                      <i className={item}></i>
                     </td>
                     <td>
-                      <LinkContainer to={`/admin/edit-user/${user._id}`}>
+                      <LinkContainer to="/admin/edit-product">
                         <Button>
                           <i className="bi bi-pencil-square"></i>
                         </Button>
@@ -73,7 +78,7 @@ export default function UserPageComponent({ fetchUsers, deleteUser }) {
                       {" / "}
                       <Button
                         variant="danger"
-                        onClick={() => deleteHandler(user._id)}
+                        onClick={() => deleteHandler(item._id)}
                       >
                         <i className="bi bi-x-circle"></i>
                       </Button>

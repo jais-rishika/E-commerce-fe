@@ -4,6 +4,7 @@ const fetchUsers = async (abctrl) => {
   const { data } = await axios.get("/api/v1/users/", {
     signal: abctrl.signal,
   });
+  console.log(data)
   return data;
 };
 const deleteUser = async (userId) => {
