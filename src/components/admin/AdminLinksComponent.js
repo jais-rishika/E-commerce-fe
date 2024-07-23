@@ -24,7 +24,7 @@ function AdminLinksComponent() {
           <Nav.Link>Analytics</Nav.Link>
         </LinkContainer>
         <Nav.Link onClick={()=>{
-          dispatchEvent(logout())
+          dispatch(logout())
         }}>Logout</Nav.Link>
       </Nav>
     </Navbar>

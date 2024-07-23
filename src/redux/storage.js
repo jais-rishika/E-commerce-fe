@@ -4,7 +4,6 @@ import thunk from "redux-thunk";
 import { userRegisterLoginReducer } from "./reducers/userReducer";
 
 const reducer = combineReducers({
-  cart: userRegisterLoginReducer,
   userRegisterLogin: userRegisterLoginReducer,
 });
 
@@ -21,7 +20,8 @@ const middleware = [thunk];
 
 const store = createStore(
   reducer,
-  { cart: { value: 0 } },
+  INITIAL_STATE,
   composeWithDevTools(applyMiddleware(...middleware))
 );
+// console.log(INITIAL_STATE);
 export default store;
