@@ -1,18 +1,20 @@
-import { useState } from "react";
 import { Alert, Button } from "react-bootstrap";
 import { LinkContainer } from "react-router-bootstrap";
+import { useNavigate } from "react-router-dom";
 
-function CartAlert() {
-  const [show, setShow] = useState(true);
-
+export default function CartAlert({showCartMessage,setShowCartMessage}) {
+  const navigate=useNavigate()
+  const goBack=()=>{
+    navigate(-1)
+  }
   return (
     <>
-      {show && (
-        <Alert variant="danger" onClose={() => setShow(false)} dismissible>
+      {showCartMessage && (
+        <Alert variant="danger" onClose={() => setShowCartMessage(false)} dismissible>
           <Alert.Heading>The product is added to the cart</Alert.Heading>
           <div>
             <LinkContainer to="/">
-              <Button variant="success">Go back</Button>
+              <Button variant="success" onClick={goBack}>Go back</Button>
             </LinkContainer>
             {" "}
             <LinkContainer to="/cart">
@@ -24,5 +26,3 @@ function CartAlert() {
     </>
   );
 }
-
-export default CartAlert;

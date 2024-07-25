@@ -88,12 +88,11 @@ export default function UserProfilePageComponent({
   };
 
   useEffect(() => {
-    fetchUserApi(userInfo.id)
+    fetchUserApi(userInfo._id)
       .then((data) => setUser(data))
       .catch((er) => console.log(er));
   }, []);
 
-  console.log(user);
   return (
     <Container>
       <Row className=" mt-5 justify-content-md-center">
