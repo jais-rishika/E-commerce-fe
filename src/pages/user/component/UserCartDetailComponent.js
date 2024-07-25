@@ -8,6 +8,7 @@ import {
   ListGroup,
   Row,
 } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 import CartItemComponent from "../../../components/CartItemsComponent";
 export default function UserCartDetailsComponent({
   cartItems,
@@ -17,21 +18,25 @@ export default function UserCartDetailsComponent({
   getUser,
   reduxDispatch,
   removeFromCart,
-  addToCart
+  addToCart,
+  createOrder,
 }) {
+  const navigate = useNavigate();
+
   const [buttonDisabled, setButtonDisabled] = useState(false);
-  const [userAddress, setUserAddress] = useState(false);
+  const [userAddress, setUserAddress] = useState({});
   const [missingAddress, setMissingAddress] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("paypal");
 
   const changeCount = (productID, count) => {
     reduxDispatch(addToCart(productID, count));
-}
+  };
 
-const removeFromCartHandler = (productID, quantity, price) => {
-  if (window.confirm("Are you sure?")) {
+  const removeFromCartHandler = (productID, quantity, price) => {
+    if (window.confirm("Are you sure?")) {
       reduxDispatch(removeFromCart(productID, quantity, price));
-  }
-}
+    }
+  };
 
   useEffect(() => {
     getUser()
@@ -66,6 +71,36 @@ const removeFromCartHandler = (productID, quantity, price) => {
         )
       );
   }, [userInfo._id]);
+
+  const orderHandler = () => {
+    const orderData = {
+      orderTotal: {
+        itemsCount: itemsCount,
+        cartSubtotal: cartSubtotal,
+      },
+      cartItems: cartItems.map((item) => {
+        return {
+          productID: item.productID,
+          name: item.name,
+          price: item.price,
+          image: { path: item.image ? item.image.path ?? null : null },
+          quantity: item.quantity,
+          count: item.count,
+        };
+      }),
+      paymentMethod: paymentMethod,
+    };
+    createOrder(orderData).then((data) => {
+      if (data) {
+        navigate("/user/my-order-details/" + data._id);
+      }
+    });
+  };
+
+  const choosePayment = (e) => {
+    setPaymentMethod(e.target.value);
+  };
+
   return (
     <Container fluid>
       <Row className="mt-4">
@@ -76,13 +111,14 @@ const removeFromCartHandler = (productID, quantity, price) => {
             <Col md={6}>
               <h2>Shipping</h2>
               <b>Name</b>: {userInfo.name} {userInfo.lastName} <br />
-              <b>Address</b>: {userAddress.address} {userAddress.city} {userAddress.state} {userAddress.ZIPcode} <br/>
+              <b>Address</b>: {userAddress.address} {userAddress.city}{" "}
+              {userAddress.state} {userAddress.ZIPcode} <br />
               <b>Phone</b>: {userAddress.phonenumber}
             </Col>
             <Col md={6}>
               <h2>Payment method</h2>
-              <Form.Select>
-                <option value="pp">PayPal</option>
+              <Form.Select onChange={choosePayment}>
+                <option value="paypal">PayPal</option>
                 <option value="cod">
                   Cash On Delivery (delivery may be delayed)
                 </option>
@@ -103,16 +139,20 @@ const removeFromCartHandler = (productID, quantity, price) => {
           </Row>
           <br />
           <h2>Order items</h2>
-          <ListGroup variant="flush">
-            {cartItems.map((item, idx) => (
-              <CartItemComponent
-                item={item}
-                key={idx}
-                removeFromCartHandler={removeFromCartHandler}
-                changeCount={changeCount}
-              />
-            ))}
-          </ListGroup>
+          {cartItems.length === 0 ? (
+            navigate("/")
+          ) : (
+            <ListGroup variant="flush">
+              {cartItems.map((item, idx) => (
+                <CartItemComponent
+                  item={item}
+                  key={idx}
+                  removeFromCartHandler={removeFromCartHandler}
+                  changeCount={changeCount}
+                />
+              ))}
+            </ListGroup>
+          )}
         </Col>
         <Col md={4}>
           <ListGroup>
@@ -134,8 +174,14 @@ const removeFromCartHandler = (productID, quantity, price) => {
             </ListGroup.Item>
             <ListGroup.Item>
               <div className="d-grid gap-2">
-                <Button disabled={buttonDisabled} size="lg" variant="danger" type="button">
-                  Pay for the order
+                <Button
+                  onClick={orderHandler}
+                  disabled={buttonDisabled || cartSubtotal === 0}
+                  size="lg"
+                  variant="danger"
+                  type="button"
+                >
+                  Place order
                 </Button>
               </div>
             </ListGroup.Item>

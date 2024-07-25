@@ -14,6 +14,12 @@ const UserCartDetails = () => {
     const {data}= await axios.get("/api/v1/users/profile/"+userInfo._id)
     return data
   }
+
+const createOrder=async(orderData)=>{
+  const {data}=await axios.post("/api/v1/orders", {...orderData})
+  return data
+
+}
   return (
     <UserCartDetailsComponent
       cartItems={cartItems}
@@ -24,6 +30,7 @@ const UserCartDetails = () => {
       reduxDispatch={reduxDispatch}
       addToCart={addToCart}
       removeFromCart={removeFromCart}
+      createOrder={createOrder}
     />
   );
 };
