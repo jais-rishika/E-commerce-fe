@@ -1,38 +1,112 @@
+import { loadScript } from "@paypal/paypal-js";
 import axios from "axios";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import UserOrderDetailsComponent from "./component/userOrderDetailComponent";
+const getOrder = async (orderID) => {
+  const { data } = await axios.get("/api/v1/orders/user/" + orderID);
+  return data;
+};
 
-const getOrder=async(orderID)=>{
-  const {data}= await axios.get("/api/v1/orders/user/"+orderID)
-    return data
-}
+const loadPayPalScript = (
+  cartSubtotal,
+  cartItems,
+  id,
+  updateStateAfterOrder
+) => {
+  loadScript({
+    clientID:
+      "AeiQKK4yLCCsuEqmIZA6zYJaDpYghM1THDNPLbQOX7Usxgg5I6-V_4-iO4A0qHqgBUxJIaa6iVcGWh-V",
+  })
+    .then((paypal) => {
+      paypal
+        .Buttons(buttons(cartSubtotal, cartItems, id, updateStateAfterOrder))
+        .render("#paypal-button-container");
+    })
+    .catch((err) =>
+      console.log("failed to load the PayPal JS SDK script", err)
+    );
+};
+
+const buttons = (cartSubtotal, cartItems, id, updateStateAfterOrder) => {
+  return {
+    createOrder: function (data, actions) {
+      return actions.order.create({
+        purchase_units: [
+          {
+            amount: {
+              value: cartSubtotal,
+              breakdown: {
+                item_total: {
+                  currency_code: "USD",
+                  value: cartSubtotal,
+                },
+              },
+            },
+            items: cartItems.map((product) => {
+              return {
+                name: product.name,
+                unit_amount: {
+                  currency_code: "USD",
+                  value: product.price,
+                },
+                quantity: product.quantity,
+              };
+            }),
+          },
+        ],
+      });
+    },
+    onCancel: onCancelHandler,
+    onApprove: function (data, actions) {
+      return actions.order.capture().then(function (orderData) {
+        var transaction = orderData.purchase_units[0].payments.capture[0];
+        if (
+          transaction.status === "COMPLETED" &&
+          Number(transaction.amount.value) === Number(cartSubtotal)
+        ) {
+          console.log("update in database");
+          updateOrder(id)
+            .then((data) => {
+              if (data.isPaid) {
+                updateStateAfterOrder(data.paidAt);
+              }
+            })
+            .catch((err) =>
+              console.log("failed to load the PayPal JS SDK script", err)
+            );
+        }
+      });
+    },
+    onError: onErrorHandler,
+  };
+};
+const onCancelHandler = () => {
+  console.log("cancel");
+};
+
+const onErrorHandler = () => {
+  console.log("error");
+};
+
+const updateOrder = async (orderID) => {
+  const { data } = await axios.put("api/v1/orders/paid/" + orderID);
+  return data;
+};
 
 const UserOrderDetailsPage = () => {
-  const cartItems = useSelector((state) => state.cart.cartItems);
-  const cartSubtotal = useSelector((state) => state.cart.cartSubtotal);
-  const itemsCount = useSelector((state) => state.cart.itemsCount);
   const userInfo = useSelector((state) => state.userRegisterLogin.userInfo);
 
-  const reduxDispatch = useDispatch();
-
-  const getUser= async()=>{
-    const {data}= await axios.get("/api/v1/users/profile/"+userInfo._id)
-    return data
-  }
-
+  const getUser = async () => {
+    const { data } = await axios.get("/api/v1/users/profile/" + userInfo._id);
+    return data;
+  };
 
   return (
     <UserOrderDetailsComponent
-      // cartItems={cartItems}
-      // cartSubtotal={cartSubtotal}
-      // itemsCount={itemsCount}
       userInfo={userInfo}
       getUser={getUser}
-      reduxDispatch={reduxDispatch}
       getOrder={getOrder}
-      // addToCart={addToCart}
-      // removeFromCart={removeFromCart}
-      // createOrder={createOrder}
+      loadPayPalScript={loadPayPalScript}
     />
   );
 };

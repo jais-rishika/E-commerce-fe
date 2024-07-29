@@ -67,10 +67,7 @@ export default function ProductsPageComponent({
                     <td>{item.price}</td>
                     <td>{item.category}</td>
                     <td>
-                      <i className={item}></i>
-                    </td>
-                    <td>
-                      <LinkContainer to="/admin/edit-product">
+                      <LinkContainer to={`/admin/edit-product/${item._id}`}>
                         <Button>
                           <i className="bi bi-pencil-square"></i>
                         </Button>

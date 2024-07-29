@@ -5,7 +5,6 @@ const fetchOrders = async (abctrl) => {
   const { data } = await axios.get("/api/v1/orders/admin", {
     signal: abctrl.signal,
   });
-  console.log(data);
   return data;
 };
 

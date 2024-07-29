@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   Badge,
   Button,
@@ -13,11 +14,17 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { LinkContainer } from "react-router-bootstrap";
 import { Link } from "react-router-dom";
+import { getCategories } from "../redux/actions/categoryActions";
 import { logout } from "../redux/actions/userActions";
 const HeaderComponent = () => {
   const dispatch = useDispatch();
   const userInfo = useSelector((state) => state.userRegisterLogin.userInfo);
   const itemsCount=useSelector((state)=> state.cart.itemsCount)
+
+  useEffect(() => {
+    dispatch(getCategories()); 
+ }, [dispatch])
+
   return (
     <Navbar collapseOnSelect expand="lg" bg="dark" variant="dark">
       <Container>

@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-    Alert,
-    Button,
-    Col,
-    Container,
-    Form,
-    ListGroup,
-    Row,
+  Alert,
+  Button,
+  Col,
+  Container,
+  Form,
+  ListGroup,
+  Row,
 } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import CartItemComponent from "../../../components/CartItemsComponent";
@@ -14,7 +14,9 @@ export default function UserOrderDetailsComponent({
   userInfo,
   getUser,
   getOrder,
+  loadPayPalScript,
 }) {
+  //local States
   const [userAddress, setUserAddress] = useState({});
   const [paymentMethod, setPaymentMethod] = useState("");
   const [isPaid, setIsPaid] = useState(false);
@@ -24,7 +26,11 @@ export default function UserOrderDetailsComponent({
   const [isDelivered, setIsDelivered] = useState(false);
   const [buttonDisabled, setButtonDisabled] = useState(false);
 
+  const paypalContainer = useRef();
+
   const { id } = useParams();
+
+  //getting user information
   useEffect(() => {
     getUser()
       .then((data) => {
@@ -37,13 +43,10 @@ export default function UserOrderDetailsComponent({
           phonenumber: data.phonenumber,
         });
       })
-      .catch((er) =>
-        console.log(
-          er.response.data.message ? er.response.data.message : er.response.data
-        )
-      );
+      .catch((err) => console.log(err));
   }, []);
 
+  //getting order information
   useEffect(() => {
     getOrder(id)
       .then((data) => {
@@ -66,11 +69,7 @@ export default function UserOrderDetailsComponent({
           }
         }
       })
-      .catch((er) =>
-        console.log(
-          er.response.data.message ? er.response.data.message : er.response.data
-        )
-      );
+      .catch((er) => console.log(er));
   }, []);
 
   const orderHandler = () => {
@@ -80,11 +79,19 @@ export default function UserOrderDetailsComponent({
         "To pay for your Order click one of the images below"
       );
       if (!isPaid) {
+        loadPayPalScript(cartSubtotal, cartItems, id, updateStateAfterOrder);
+      } else {
+        setOrderButtonMessage("Your Order was Placed , ThankYou!");
       }
-    } else {
-        setOrderButtonMessage("Your Order was Placed , ThankYou!")
     }
   };
+
+  const updateStateAfterOrder=(paidAt)=>{
+    setOrderButtonMessage("ThankYou! for your Payment");
+    setIsPaid(paidAt)
+    setButtonDisabled(true)
+    paypalContainer.current.style="display: none"
+  }
 
   return (
     <Container fluid>
@@ -155,7 +162,7 @@ export default function UserOrderDetailsComponent({
               Total price: <span className="fw-bold">${cartSubtotal}</span>
             </ListGroup.Item>
             <ListGroup.Item>
-              <div className="d-grid gap-2">
+              <div className="d-grid gap-2 mb-3">
                 <Button
                   size="lg"
                   variant="danger"
@@ -166,6 +173,7 @@ export default function UserOrderDetailsComponent({
                   {orderButtonMessage}
                 </Button>
               </div>
+              <div ref={paypalContainer} id="paypal-button-container"></div>
             </ListGroup.Item>
           </ListGroup>
         </Col>

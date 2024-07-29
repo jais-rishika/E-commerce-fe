@@ -88,7 +88,7 @@ export default function UserProfilePageComponent({
   };
 
   useEffect(() => {
-    fetchUserApi(userInfo._id)
+    fetchUserApi(userInfo.id)
       .then((data) => setUser(data))
       .catch((er) => console.log(er));
   }, []);
