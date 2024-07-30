@@ -47,7 +47,7 @@ const CreateProductPageComponent = ({
   const handleSubmit = (event) => {
     event.preventDefault();
     event.stopPropagation();
-    const form = event.currentTarget;
+    const form = event.currentTarget.elements;
     //creating these values
     const formInputs = {
       name: form.name.value,

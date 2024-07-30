@@ -6,7 +6,8 @@ import { changeCategory, setAttributeWrapper, setValueForAttributeKey } from "./
 import { uploadImagesCloudinaryApiRequest } from "./utils/utils";
 
 const createProductApiRequest = async (formInputs) => {
-  const { data } = await axios.post("/api/products/admin", { formInputs });
+  const { data } = await axios.post("/api/v1/products/admin", {...formInputs });
+  console.log(data)
   return data;
 };
 const AdminCreateProductPage = () => {
