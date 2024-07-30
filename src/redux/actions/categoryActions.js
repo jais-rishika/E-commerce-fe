@@ -22,3 +22,26 @@ export const saveAttributesInTheDoc =
       });
     }
   };
+
+  export const newCategory= (category) => async(dispatch,getState)=>{
+    const cat =getState().getCategories.categories
+    const {data}= await axios.post("/api/v1/categories",{category})
+    if(data.categoryCreated){
+      dispatch({
+        type:actionTypes.INSERT_CATEGORY,
+        payload: [...cat,data.categoryCreated]
+      })
+    }
+  }
+
+  export const deleteCategory= (category) => async(dispatch,getState)=>{
+    const cat =getState().getCategories.categories
+    const categories= cat.filter((item)=> item.name!==category)
+    const {data}= await axios.delete("/api/v1/categories/"+encodeURIComponent(category))
+    if(data.categoryDeleted){
+      dispatch({
+        type:actionTypes.DELETE_CATEGORY,
+        payload: [...categories]
+      })
+    }
+  }

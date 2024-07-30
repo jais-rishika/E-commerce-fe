@@ -20,7 +20,7 @@ const onHover = {
   transform: "scale(2.7)",
 };
 
-const AdminEditProductComponent = ({
+const EditProductComponent = ({
   categories,
   fetchProducts,
   updateProductApiRequest,
@@ -28,7 +28,10 @@ const AdminEditProductComponent = ({
   saveAttributesInTheDoc,
   imageDeleteHandler,
   uploadHandler,
-  uploadImagesCloudinaryApiRequest
+  uploadImagesCloudinaryApiRequest,
+  changeCategory,
+  setAttributeWrapper,
+  setValueForAttributeKey
 }) => {
   //local States
   const [validated, setValidated] = useState(false);
@@ -55,36 +58,37 @@ const AdminEditProductComponent = ({
   const createNewAttrValue = useRef(null);
 
   //changing attributes based on category
-  const changeCategory = (e) => {
-    const highLevelCategory = e.target.value.split("/")[0];
-    const highLevelCategoryAllData = categories.find(
-      (cat) => cat.name === highLevelCategory
-    );
-    if (highLevelCategoryAllData && highLevelCategoryAllData.attrs) {
-      console.log(highLevelCategoryAllData);
-      setAttributeFromDb(highLevelCategoryAllData.attrs);
-    } else {
-      setAttributeFromDb([]);
-    }
-    setCategoryChosen(e.target.value);
-  };
+  
+  // const changeCategory = (e) => {
+  //   const highLevelCategory = e.target.value.split("/")[0];
+  //   const highLevelCategoryAllData = categories.find(
+  //     (cat) => cat.name === highLevelCategory
+  //   );
+  //   if (highLevelCategoryAllData && highLevelCategoryAllData.attrs) {
+  //     console.log(highLevelCategoryAllData);
+  //     setAttributeFromDb(highLevelCategoryAllData.attrs);
+  //   } else {
+  //     setAttributeFromDb([]);
+  //   }
+  //   setCategoryChosen(e.target.value);
+  // };
 
-  //selecting value according to the attribute selected
-  const setValueForAttributeKey = (e) => {
-    if (e.target.value !== "choose attribute") {
-      var selectedAttr = attributeFromDb.find(
-        (item) => item.key === e.target.value
-      );
-      let valueForAttribute = attrvalue.current;
-      if (selectedAttr && selectedAttr.value.length > 0) {
-        valueForAttribute.options.length = 0;
-        valueForAttribute.add(new Option("choose attribute"));
-        selectedAttr.value.map((item) => {
-          valueForAttribute.add(new Option(item));
-        });
-      }
-    }
-  };
+ 
+  // const setValueForAttributeKey = (e) => {
+  //   if (e.target.value !== "choose attribute") {
+  //     var selectedAttr = attributeFromDb.find(
+  //       (item) => item.key === e.target.value
+  //     );
+  //     let valueForAttribute = attrvalue.current;
+  //     if (selectedAttr && selectedAttr.value.length > 0) {
+  //       valueForAttribute.options.length = 0;
+  //       valueForAttribute.add(new Option("choose attribute"));
+  //       selectedAttr.value.map((item) => {
+  //         valueForAttribute.add(new Option(item));
+  //       });
+  //     }
+  //   }
+  // };
 
   //fetching product detail
   useEffect(() => {
@@ -132,7 +136,7 @@ const AdminEditProductComponent = ({
       updateProductApiRequest(id, formInputs)
         .then((data) => {
           console.log(data);
-          if (data.message === "product updated") navigate("/admin/products");
+          if (data.message === "product updated") navigate("//products");
         })
         .catch((er) =>
           setUpdateProductResponseState(
@@ -149,30 +153,31 @@ const AdminEditProductComponent = ({
   //adding th e attributes into the html table as they are added
   const attributeValueSelector = (e) => {
     if (e.target.value !== "choose attribute") {
-      setAttributeWrapper(attrkey.current.value, attrvalue.current.value);
+      setAttributeWrapper(attrkey.current.value, attrvalue.current.value,setAttributeTable);
     }
   };
-  const setAttributeWrapper = (key, val) => {
-    setAttributeTable((attr) => {
-      if (attr.length != 0) {
-        let keyExistInTable = false;
-        let modifiedTable = attr.map((item) => {
-          if (item.key === key) {
-            keyExistInTable = true;
-            item.value = val;
-            return item;
-          } else {
-            return item;
-          }
-        });
-        return keyExistInTable
-          ? modifiedTable
-          : [...modifiedTable, { key: key, value: val }];
-      } else {
-        return [{ key: key, value: val }];
-      }
-    });
-  };
+  
+  // const setAttributeWrapper = (key, val) => {
+  //   setAttributeTable((attr) => {
+  //     if (attr.length != 0) {
+  //       let keyExistInTable = false;
+  //       let modifiedTable = attr.map((item) => {
+  //         if (item.key === key) {
+  //           keyExistInTable = true;
+  //           item.value = val;
+  //           return item;
+  //         } else {
+  //           return item;
+  //         }
+  //       });
+  //       return keyExistInTable
+  //         ? modifiedTable
+  //         : [...modifiedTable, { key: key, value: val }];
+  //     } else {
+  //       return [{ key: key, value: val }];
+  //     }
+  //   });
+  // };
 
   const deleteAttribute = (key) => {
     setAttributeTable((attr) => attr.filter((row) => row.key !== key));
@@ -200,7 +205,7 @@ const AdminEditProductComponent = ({
         reduxDispatch(
           saveAttributesInTheDoc(newAttrKey, newAttrValue, categoryChosen)
         );
-        setAttributeWrapper(newAttrKey, newAttrValue);
+        setAttributeWrapper(newAttrKey, newAttrValue,setAttributeTable);
         e.target.value = "";
         createNewAttrKey.current.value = "";
         createNewAttrValue.current.value = "";
@@ -273,7 +278,7 @@ const AdminEditProductComponent = ({
                 required
                 name="category"
                 aria-label="Default select example"
-                onChange={changeCategory}
+                onChange={(e)=>changeCategory(e,categories,setAttributeFromDb,setCategoryChosen)}
               >
                 <option value="choose category">Choose category</option>
                 {categories.map((category, idx) => {
@@ -302,7 +307,7 @@ const AdminEditProductComponent = ({
                       name="atrrkey"
                       aria-label="Default select example"
                       ref={attrkey}
-                      onChange={setValueForAttributeKey}
+                      onChange={(e)=>setValueForAttributeKey(e,attributeFromDb,attrvalue)}
                     >
                       <option value="choose attribute">Choose attribute</option>
                       {attributeFromDb.map((attr, idx) => (
@@ -342,7 +347,7 @@ const AdminEditProductComponent = ({
                   </thead>
                   <tbody>
                     {attributeTable.map((attr, idx) => (
-                      <tr>
+                      <tr key={idx}>
                         <td>{attr.key}</td>
                         <td>{attr.value}</td>
                         <td>
@@ -446,4 +451,5 @@ const AdminEditProductComponent = ({
   );
 };
 
-export default AdminEditProductComponent;
+export default EditProductComponent;
+

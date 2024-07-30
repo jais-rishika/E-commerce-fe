@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Alert,
   Button,
@@ -12,20 +12,37 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 
 const CreateProductPageComponent = ({
+  categories,
   createProductApiRequest,
   uploadImagesCloudinaryApiRequest,
+  changeCategory,
+  setAttributeWrapper,
+  setValueForAttributeKey,
+  newCategory,
+  deleteCategory,
+  reduxDispatch,
+  saveAttributesInTheDoc,
 }) => {
-  const navigate=useNavigate()
+  const navigate = useNavigate();
   //local States
 
   const [validated, setValidated] = useState(false);
-  const [attributeTable, SetAttributeTable] = useState([]);
+  const [attributeTable, setAttributeTable] = useState([]);
+  const [attributesFromDb, setAttributesFromDb] = useState([]);
   const [image, setImage] = useState(false);
-  const [isCreating, setIsCreating] = useState("");
+  const [isUploading, setIsUploading] = useState("");
   const [createProductResponseState, setCreateProductResponseState] = useState({
     message: "",
     error: "",
   });
+  const [categoryChosen, setCategoryChosen] = useState("choose category");
+  const [newAttrKey, setNewAttrKey] = useState(false);
+  const [newAttrValue, setNewAttrValue] = useState(false);
+
+  const attrkey = useRef(null);
+  const attrvalue = useRef(null);
+  const createNewAttrKey = useRef(null);
+  const createNewAttrValue = useRef(null);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -42,7 +59,7 @@ const CreateProductPageComponent = ({
     };
     if (event.currentTarget.checkValidity() === true) {
       if (image.length > 3) {
-        setIsCreating("too many Files");
+        setIsUploading("too many Files");
       }
       createProductApiRequest(formInputs)
         .then((data) => {
@@ -68,6 +85,66 @@ const CreateProductPageComponent = ({
     setImage(image);
   };
 
+  const deleteAttribute = (key) => {
+    setAttributeTable((attr) => attr.filter((row) => row.key !== key));
+  };
+
+  const attributeValueSelector = (e) => {
+      setAttributeWrapper(
+        attrkey.current.value,
+        attrvalue.current.value,
+        setAttributeTable
+      );
+  };
+
+  const checkKeyDown = (e) => {
+    if (e.code === "Enter") e.preventDefault();
+  };
+
+  const newAttributeKeyHandler = (e) => {
+    e.preventDefault();
+    setNewAttrKey(e.target.value);
+    addNewAttributeManually(e);
+  };
+  const newAttributeValueHandler = (e) => {
+    e.preventDefault();
+    setNewAttrValue(e.target.value);
+    addNewAttributeManually(e);
+  };
+  const addNewAttributeManually = (e) => {
+    if (e.keyCode && e.keyCode === 13) {
+      //13 -> enter
+      if (newAttrKey && newAttrValue) {
+        reduxDispatch(
+          saveAttributesInTheDoc(newAttrKey, newAttrValue, categoryChosen)
+        );
+        setAttributeWrapper(newAttrKey, newAttrValue, setAttributeTable);
+        e.target.value = "";
+        createNewAttrKey.current.value = "";
+        createNewAttrValue.current.value = "";
+        setNewAttrKey(false);
+        setNewAttrValue(false);
+      }
+    }
+  };
+  const newCategoryHandler = (e) => {
+    if (e.keyCode && e.keyCode === 13 && e.target.value) {
+      reduxDispatch(newCategory(e.target.value));
+      setCategoryChosen(e.target.value);
+      setTimeout(() => {
+        let element = document.getElementById("cats");
+        element.value = e.target.value;
+        e.target.value = "";
+      }, 200);
+      setAttributeTable([])
+    }
+  };
+  const deleteCategoryHandler = (e) => {
+    let element = document.getElementById("cats");
+    reduxDispatch(deleteCategory(element.value));
+    setCategoryChosen("Choose category");
+    setAttributeTable([])
+  };
   return (
     <Container>
       <Row className="justify-content-md-center mt-5">
@@ -78,7 +155,12 @@ const CreateProductPageComponent = ({
         </Col>
         <Col md={6}>
           <h1>Create a new product</h1>
-          <Form noValidate validated={validated} onSubmit={handleSubmit}>
+          <Form
+            noValidate
+            validated={validated}
+            onSubmit={handleSubmit}
+            onKeyDown={(e) => checkKeyDown(e)}
+          >
             <Form.Group className="mb-3" controlId="formBasicName">
               <Form.Label>Name</Form.Label>
               <Form.Control name="name" required type="text" />
@@ -106,17 +188,31 @@ const CreateProductPageComponent = ({
             </Form.Group>
             <Form.Group className="mb-3" controlId="formBasicCategory">
               <Form.Label>
-                Category <CloseButton />(<small>remove selected</small>)
+                Category <CloseButton onClick={deleteCategoryHandler} />(
+                <small>remove selected</small>)
               </Form.Label>
               <Form.Select
+                id="cats"
                 required
                 name="category"
                 aria-label="Default select example"
+                onChange={(e) =>{
+                  changeCategory(
+                    e,
+                    categories,
+                    setAttributesFromDb,
+                    setCategoryChosen
+                  )
+                  setAttributeTable([])
+                  }
+                }
               >
                 <option value="">Choose category</option>
-                <option value="1">Laptops</option>
-                <option value="2">TV</option>
-                <option value="3">Games</option>
+                {categories.map((category, idx) => (
+                  <option key={idx} value={category.name}>
+                    {category.name}
+                  </option>
+                ))}
               </Form.Select>
             </Form.Group>
 
@@ -124,54 +220,86 @@ const CreateProductPageComponent = ({
               <Form.Label>
                 Or create a new Category (e.g. Computers/Laptops/Intel){" "}
               </Form.Label>
-              <Form.Control name="newcategory" type="text"></Form.Control>
+              <Form.Control
+                name="newcategory"
+                type="text"
+                onKeyUp={newCategoryHandler}
+              ></Form.Control>
             </Form.Group>
 
-            <Row>
-              <Col md={6}>
-                <Form.Group
-                  className="mb-3"
-                  controlId="formbasicattributeValue"
-                >
-                  <Form.Label>Choose Attribute & set Value</Form.Label>
-                  <Form.Select
-                    name="atrrval"
-                    aria-label="Default select example"
+            {attributesFromDb.length > 0 && (
+              <Row>
+                <Col md={6}>
+                  <Form.Group
+                    className="mb-3"
+                    controlId="formbasicattributeValue"
                   >
-                    <option>Choose attribute</option>
-                    <option value="red">Color</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-              <Col md={6}>
-                <Form.Group
-                  className="mb-3"
-                  controlId="formbasicattributeValue"
-                >
-                  <Form.Label>Attribute Value</Form.Label>
-                  <Form.Select
-                    name="atrrval"
-                    aria-label="Default select example"
-                  ></Form.Select>
-                </Form.Group>
-              </Col>
-            </Row>
+                    <Form.Label>Choose Attribute & set Value</Form.Label>
+                    <Form.Select
+                      name="atrrval"
+                      aria-label="Default select example"
+                      ref={attrkey}
+                      onChange={(e) =>
+                        setValueForAttributeKey(
+                          e,
+                          attributesFromDb,
+                          attrvalue
+                        )
+                      }
+                    >
+                      <option>Choose attribute</option>
+                      {attributesFromDb.map((item, idx) => (
+                        <React.Fragment key={idx}>
+                          <option value={item.key}>{item.key}</option>
+                        </React.Fragment>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+                <Col md={6}>
+                  <Form.Group
+                    className="mb-3"
+                    controlId="formbasicattributeValue"
+                  >
+                    <Form.Label>Attribute Value</Form.Label>
+                    <Form.Select
+                      name="atrrval"
+                      aria-label="Default select example"
+                      ref={attrvalue}
+                      onChange={attributeValueSelector}
+                    >
+                      <option>Choose attribute value</option>
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+              </Row>
+            )}
 
             <Row>
-              <Table hover>
-                <thead>
-                  <tr>
-                    <th>Attribute</th>
-                    <th>Value</th>
-                    <th>Delete</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <td>attr key</td>
-                  <td>attr value</td>
-                  <td>X</td>
-                </tbody>
-              </Table>
+              {attributeTable.length > 0 && (
+                <Table hover>
+                  <thead>
+                    <tr>
+                      <th>Attribute</th>
+                      <th>Value</th>
+                      <th>Delete</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {attributeTable.map((item, idx) => (
+                      <tr key={idx}>
+                        <td>{item.key}</td>
+                        <td>{item.value}</td>
+                        <td>
+                          <CloseButton
+                            onClick={() => deleteAttribute(item.key)}
+                          />
+                        </td>
+                      </tr>
+              ))}
+                  </tbody>
+                </Table>
+              )}
             </Row>
 
             <Row>
@@ -179,10 +307,12 @@ const CreateProductPageComponent = ({
                 <Form.Group className="mb-3" controlId="formBasicNewAttribute">
                   <Form.Label>Create new attribute</Form.Label>
                   <Form.Control
-                    disabled={false}
+                    ref={createNewAttrKey}
+                    disabled={["", "choose category"].includes(categoryChosen)}
                     placeholder="first choose or create category"
                     name="newAttrValue"
                     type="text"
+                    onKeyUp={newAttributeKeyHandler}
                   />
                 </Form.Group>
               </Col>
@@ -193,17 +323,19 @@ const CreateProductPageComponent = ({
                 >
                   <Form.Label>Attribute value</Form.Label>
                   <Form.Control
-                    disabled={false}
+                    ref={createNewAttrValue}
+                    disabled={["", "choose category"].includes(categoryChosen)}
                     placeholder="first choose or create category"
-                    required={true}
+                    required={newAttrKey}
                     name="newAttrValue"
                     type="text"
+                    onKeyUp={newAttributeValueHandler}
                   />
                 </Form.Group>
               </Col>
             </Row>
 
-            <Alert variant="primary">
+            <Alert show={newAttrKey && newAttrValue} variant="primary">
               After typing attribute key and value press enterr on one of the
               field
             </Alert>
@@ -211,11 +343,18 @@ const CreateProductPageComponent = ({
             <Form.Group controlId="formFileMultiple" className="mb-3 mt-3">
               <Form.Label>Images</Form.Label>
 
-              <Form.Control required type="file" multiple onChange={(e)=>uploadHandler(e.target.files)} />
+              <Form.Control
+                required
+                type="file"
+                multiple
+                onChange={(e) => uploadHandler(e.target.files)}
+              />
+              {isUploading}
             </Form.Group>
             <Button variant="primary" type="submit">
               Create
             </Button>
+            {createProductResponseState.error ?? ""}
           </Form>
         </Col>
       </Row>

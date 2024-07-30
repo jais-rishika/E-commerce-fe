@@ -1,7 +1,8 @@
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { saveAttributesInTheDoc } from "../../redux/actions/categoryActions";
-import AdminEditProductComponent from "./components/AdminEditProductComponent";
+import EditProductComponent from "./components/EditProductComponent";
+import { changeCategory, setAttributeWrapper, setValueForAttributeKey } from "./components/utils/utils";
 import { uploadImagesCloudinaryApiRequest } from "./utils/utils";
 const fetchProducts = async (productID) => {
   const { data } = await axios.get(`/api/v1/products/get-one/${productID}`);
@@ -34,7 +35,7 @@ const AdminEditProductPage = () => {
   };
 
   return (
-    <AdminEditProductComponent
+    <EditProductComponent
       categories={categories}
       fetchProducts={fetchProducts}
       updateProductApiRequest={updateProductApiRequest}
@@ -43,6 +44,9 @@ const AdminEditProductPage = () => {
       imageDeleteHandler={imageDeleteHandler}
       uploadHandler={uploadHandler}
       uploadImagesCloudinaryApiRequest={uploadImagesCloudinaryApiRequest}
+      changeCategory={changeCategory}
+      setAttributeWrapper={setAttributeWrapper}
+      setValueForAttributeKey={setValueForAttributeKey}
     />
   );
 };
