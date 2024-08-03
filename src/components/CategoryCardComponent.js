@@ -8,15 +8,14 @@ function CategoryCardComponent({ category, idx }) {
       <Card.Img
         crossOrigin="anonymous"
         variant="top"
-        src="/images/tablets-category.png"
+        src={category.image ?? null}
       />
       <Card.Body>
-        <Card.Title>{category}</Card.Title>
+        <Card.Title>{category.name}</Card.Title>
         <Card.Text>
-          Some quick example text to build on the card title and make up the
-          bulk of the card's content.
+          {category.description}
         </Card.Text>
-        <LinkContainer to="/product-list">
+        <LinkContainer to= {`/product-list/category/${category.name}`}>
           <Button variant="primary" className="w-100">
             Go to Category
           </Button>
