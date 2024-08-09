@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Container, Row } from "react-bootstrap";
 import CategoryCardComponent from "../../components/CategoryCardComponent";
+import MetaComponent from "../../components/MetaComponent";
 import CarouselComponent from "../../components/carouselComponent";
 
 export default function HomePageComponent({categories,fetchBestSellers}) {
@@ -19,6 +20,7 @@ export default function HomePageComponent({categories,fetchBestSellers}) {
     }, [categories])
   return (
     <div>
+      <MetaComponent/>
       <CarouselComponent bestSellers={bestSellers}/>
       <Container>
         <Row xs={1} md={2} className="g-4 mt-5" >

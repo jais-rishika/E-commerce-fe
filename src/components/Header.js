@@ -14,21 +14,24 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { LinkContainer } from "react-router-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
+import socketIOClient from "socket.io-client";
 import { getCategories } from "../redux/actions/categoryActions";
+import { removeChatroom, setChatRooms, setMessageReceived, setSocket } from "../redux/actions/chatAction";
 import { logout } from "../redux/actions/userActions";
 const HeaderComponent = () => {
   const dispatch = useDispatch();
   const userInfo = useSelector((state) => state.userRegisterLogin.userInfo);
   const itemsCount = useSelector((state) => state.cart.itemsCount);
   const { categories } = useSelector((state) => state.getCategories);
+  const { messageReceived } = useSelector((state) => state.adminChat);
 
   const [searchCategoryToggle, setSearchCategoryToggle] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
-
   const navigate = useNavigate();
   useEffect(() => {
     dispatch(getCategories());
   }, [dispatch]);
+
 
   const submitHandler = (e) => {
     if (e.keyCode && e.keyCode !== 13) return;
@@ -52,6 +55,29 @@ const HeaderComponent = () => {
       navigate("/product-list");
     }
   };
+
+  useEffect(()=>{
+    if(userInfo.isAdmin){
+      var audio=new Audio("/audio/chat-msg.mp3")
+      const socket = socketIOClient()
+      socket.emit("server:admin-connected", "Admin" + Math.floor(Math.random() * 1000000000000));
+      socket.on("server:client-admin-message",({user,message})=>{
+      dispatch(setSocket(socket))
+      //   let chatRooms = {
+      //     fddf54gfgfSocketID: [{ "client": "dsfdf" }, { "client": "dsfdf" }, { "admin": "dsfdf" }],
+      //   };
+      dispatch(setChatRooms(user, message));  
+      dispatch(setMessageReceived(true))
+      audio.play()
+      })
+      socket.on("disconnected",({reason,socketId})=>{
+        // console.log("socketid"+socketId)
+        dispatch(removeChatroom(socketId))
+      })
+      return ()=> socket.disconnect()
+    }
+  },[userInfo.isAdmin])
+  
   return (
     <Navbar collapseOnSelect expand="lg" bg="dark" variant="dark">
       <Container>
@@ -92,7 +118,9 @@ const HeaderComponent = () => {
           <Nav>
             {userInfo.isAdmin ? (
               <LinkContainer to="/admin/orders">
-                <Nav.Link>Admin </Nav.Link>
+                <Nav.Link>Admin
+                {messageReceived && <span className="position-absolute top-1 start-10 translate-middle p-2 bg-danger border border-light rounded-circle"></span>}
+                </Nav.Link>
               </LinkContainer>
             ) : userInfo.name && !userInfo.isAdmin ? (
               <>

@@ -3,12 +3,14 @@ import { composeWithDevTools } from "redux-devtools-extension";
 import thunk from "redux-thunk";
 import { cartReducer } from "./reducers/cartReducer";
 import { getCategoriesReducer } from "./reducers/categoryReducers";
+import { adminChatReducer } from "./reducers/chatReducer";
 import { userRegisterLoginReducer } from "./reducers/userReducer";
 
 const reducer = combineReducers({
   userRegisterLogin: userRegisterLoginReducer,
   cart: cartReducer,
   getCategories: getCategoriesReducer,
+  adminChat: adminChatReducer
 });
 
 const userInfoInLocalStorage = localStorage.getItem("userInfo")

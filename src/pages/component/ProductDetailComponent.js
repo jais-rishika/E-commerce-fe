@@ -12,6 +12,7 @@ import {
 } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import { Rating } from "react-simple-star-rating";
+import MetaComponent from "../../components/MetaComponent";
 import CartAlert from "../../components/user/CartAlert";
 export default function ProductDetailComponent({
   ReduxAddToCart,
@@ -93,6 +94,8 @@ export default function ProductDetailComponent({
     }
   }
   return (
+    <>
+    <MetaComponent title={product.name} description={product.description}/>
     <Container>
       <CartAlert
         showCartMessage={showCartMessage}
@@ -250,5 +253,6 @@ export default function ProductDetailComponent({
         )}
       </Row>
     </Container>
+    </>
   );
 }
