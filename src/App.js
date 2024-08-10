@@ -50,7 +50,6 @@ function App() {
           <Route path="/product-list/search/:searchQuery/:pageNumParam" element={<ProductListPage/>}/>
           <Route path="/product-list/category/:categoryName/search/:searchQuery" element={<ProductListPage/>}/>
           <Route path="/product-list/category/:categoryName/search/:searchQuery/:pageNumParam" element={<ProductListPage/>}/>
-
           <Route path="/cart" element={<CartPage/>}/>
           <Route path="/login" element={<LoginPage/>}/>
           <Route path="/register" element={<RegisterPage/>}/>

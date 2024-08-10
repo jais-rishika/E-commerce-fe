@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import {
-    Alert,
-    Button,
-    Col,
-    Container,
-    Form,
-    InputGroup,
-    Row,
-    Spinner,
+  Alert,
+  Button,
+  Col,
+  Container,
+  Form,
+  InputGroup,
+  Row,
+  Spinner,
 } from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 export default function RegisterPageComponent({
@@ -61,7 +61,11 @@ export default function RegisterPageComponent({
           });
 
           reduxDispatch(setReduxUserState(data.userCreated));
-          
+          if (data.success === "User Logged in" && !data.userLoggedIn.isAdmin) {
+            navigate("/user", { replace: true });
+          } else {
+            navigate("/login", { replace: true });
+          } 
         })
         .catch((er) => {
           setRegisterUserResponseState({
